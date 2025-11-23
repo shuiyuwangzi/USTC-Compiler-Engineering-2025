@@ -140,6 +140,19 @@ void FunctionInline::inline_function(Instruction *call, Function *origin) {
             // 5. 设置返回值
             // 6. 将bb_phi添加到基本块列表
             // 7. 添加从bb_phi到bb_new的跳转
+                auto bb_phi =BasicBlock::create(call_func->get_parent(), "", call_func);
+                auto phi = PhiInst::create_phi(origin->get_return_type(), bb_phi);
+                for (auto ret : ret_list) {
+                auto ret_ = ret->get_operand(0);
+                auto ret_b = ret->get_parent();
+                ret_b->remove_instr(ret);
+                phi->add_phi_pair_operand(ret_, ret_b);
+                BranchInst::create_br(bb_phi, ret_b);
+            }
+            bb_phi->add_instr_begin(phi);
+            ret_val = phi;
+            bb_list.push_back(bb_phi);
+            BranchInst::create_br(bb_new, bb_phi);
         }
     } else {
         assert(ret_void_bbs.size() > 0);
